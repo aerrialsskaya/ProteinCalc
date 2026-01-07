@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Protein Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg: #f1f5f9;
+        }
+        body {
+            background-color: var(--bg);
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .app-container {
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        .input-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .history-item {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-start justify-center pt-8 px-4 pb-12">
+
+    <div class="app-container w-full space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-2">
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">PROTEIN<span class="text-indigo-600">.</span></h1>
+                <p class="text-xs font-medium text-slate-400 uppercase tracking-widest">Калькулятор порции</p>
+            </div>
+            <div class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Result Display -->
+        <div id="result-box" class="bg-indigo-600 rounded-[32px] p-8 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden transition-transform duration-200">
+            <div class="relative z-10">
+                <p class="text-indigo-200 text-sm font-semibold mb-1 uppercase tracking-wider">Итого белка</p>
+                <div class="flex items-baseline">
+                    <span id="res" class="text-6xl font-black tracking-tighter">0.0</span>
+                    <span class="text-2xl font-medium ml-2 text-indigo-200">грамм</span>
+                </div>
+            </div>
+            <!-- Decorative circle -->
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500 rounded-full opacity-50"></div>
+        </div>
+
+        <!-- Form -->
+        <div class="input-card p-6 space-y-5">
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Белок на 100г продукта</label>
+                <div class="relative">
+                    <input type="number" id="y" inputmode="decimal" placeholder="Например: 18.5" 
+                        class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
+                    <div class="absolute right-5 top-4 text-slate-300 font-bold">Y</div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Вес вашей порции (г)</label>
+                <div class="relative">
+                    <input type="number" id="z" inputmode="numeric" placeholder="Например: 250" 
+                        class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
+                    <div class="absolute right-5 top-4 text-slate-300 font-bold">Z</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formula Hint -->
+        <div class="text-center">
+            <span class="bg-white px-4 py-2 rounded-full text-[10px] font-bold text-slate-400 shadow-sm uppercase tracking-widest border border-slate-100">
+                Formula: (Y / 100) * Z
+            </span>
+        </div>
+
+        <!-- History Section -->
+        <div id="history-section" class="hidden space-y-3 px-2">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">История</h2>
+                <button onclick="clearHistory()" class="text-[10px] font-bold text-indigo-500 uppercase">Очистить</button>
+            </div>
+            <div id="history-list" class="space-y-2">
+                <!-- Items injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const yInput = document.getElementById('y');
+        const zInput = document.getElementById('z');
+        const resDisplay = document.getElementById('res');
+        const resultBox = document.getElementById('result-box');
+        const historySection = document.getElementById('history-section');
+        const historyList = document.getElementById('history-list');
+
+        let history = [];
+        let saveTimer;
+
+        function update() {
+            const y = parseFloat(yInput.value) || 0;
+            const z = parseFloat(zInput.value) || 0;
+            
+            if (y === 0 || z === 0) {
+                resDisplay.innerText = "0.0";
+                return;
+            }
+
+            const result = (y / 100) * z;
+            const formattedResult = result % 1 === 0 ? result.toFixed(0) : result.toFixed(1);
+            
+            resDisplay.innerText = formattedResult;
+            
+            // Эффект пульсации
+            resultBox.classList.add('scale-[1.03]');
+            setTimeout(() => resultBox.classList.remove('scale-[1.03]'), 150);
+
+            // Сохранение в историю через 1.5 сек после окончания ввода
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                addToHistory(y, z, formattedResult);
+            }, 1500);
+        }
+
+        function addToHistory(y, z, x) {
+            const entry = { y, z, x, id: Date.now() };
+            // Не добавляем дубликаты подряд
+            if (history.length > 0 && history[0].y === y && history[0].z === z) return;
+            
+            history.unshift(entry);
+            history = history.slice(0, 5); // Только 5 записей
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (history.length > 0) {
+                historySection.classList.remove('hidden');
+                historyList.innerHTML = history.map(item => `
+                    <div class="history-item bg-white/60 backdrop-blur-sm border border-white p-4 rounded-2xl flex justify-between items-center shadow-sm">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">${item.z}г продукта</span>
+                            <span class="text-xs font-bold text-slate-600">${item.y}г белка на 100г</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-lg font-black text-indigo-600">${item.x}г</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function clearHistory() {
+            history = [];
+            historySection.classList.add('hidden');
+            historyList.innerHTML = '';
+        }
+
+        yInput.addEventListener('input', update);
+        zInput.addEventListener('input', update);
+    </script>
+</body>
+</html>
