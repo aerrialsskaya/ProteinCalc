@@ -45,8 +45,8 @@
             <!-- Header -->
             <div class="flex items-center justify-between px-2 mb-6">
                 <div>
-                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">PROTEIN<span class="text-indigo-600">.</span></h1>
-                    <p class="text-xs font-medium text-slate-400 uppercase tracking-widest">Калькулятор порции</p>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">PROTEIN CALCULATOR<span class="text-indigo-600">.</span></h1>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-widest">Калькулятор белка в порции</p>
                 </div>
                 <div class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,7 +71,7 @@
             <!-- Form -->
             <div class="input-card p-6 space-y-5 mb-6">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Белок на 100г продукта</label>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Белок на 100г продукта (г)</label>
                     <div class="relative">
                         <input type="number" id="y" inputmode="decimal" placeholder="Например: 18.5" 
                             class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
@@ -142,7 +142,7 @@
         <div class="flex justify-around items-center h-16 max-w-md mx-auto">
             <button onclick="switchTab('calc')" class="nav-item active flex-1 flex flex-col items-center justify-center transition-colors" id="nav-calc">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                <span class="text-[9px] font-black uppercase mt-1 tracking-widest">Считать</span>
+                <span class="text-[9px] font-black uppercase mt-1 tracking-widest">Калькулятор</span>
             </button>
             <button onclick="switchTab('daily')" class="nav-item flex-1 flex flex-col items-center justify-center transition-colors relative" id="nav-daily">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
@@ -324,3 +324,4 @@
     </script>
 </body>
 </html>
+
