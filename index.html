@@ -2,254 +2,294 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Protein Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --bg: #f1f5f9;
-        }
-        body {
-            background-color: var(--bg);
-            touch-action: manipulation;
+        :root { --primary: #4f46e5; --bg: #f1f5f9; }
+        body { 
+            background-color: var(--bg); 
+            touch-action: manipulation; 
             -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
         }
-        .app-container {
-            max-width: 450px;
-            margin: 0 auto;
-        }
-        .input-card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-        input:focus {
-            transform: scale(1.02);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-        .history-item {
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .app-container { max-width: 450px; margin: 0 auto; }
+        
+        /* Стили из вашего кода */
+        .input-card { background: white; border-radius: 24px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        input:focus { transform: scale(1.02); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        /* Логика вкладок */
+        .tab-content { display: none; padding-bottom: 100px; } /* отступ под меню */
+        .tab-content.active { display: block; animation: fadeIn 0.2s ease-out; }
+        
+        /* Анимации */
+        .history-item { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Навигация */
+        .nav-item.active { color: var(--primary); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 15px); }
     </style>
 </head>
-<body class="min-h-screen flex items-start justify-center pt-8 px-4 pb-12">
+<body class="min-h-screen flex flex-col items-center pt-8 px-4">
 
-    <div class="app-container w-full space-y-6">
-        <!-- Header -->
-        <div class="flex items-center justify-between px-2">
-            <div>
-                <h1 class="text-2xl font-black text-slate-800 tracking-tight">PROTEIN CALCULATOR<span class="text-indigo-600">.</span></h1>
-                <p class="text-xs font-medium text-slate-400 uppercase tracking-widest">Калькулятор белка в порции</p>
-            </div>
-            <div class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-            </div>
-        </div>
-
-        <!-- Result Display -->
-        <div id="result-box" class="bg-indigo-600 rounded-[32px] p-8 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden transition-transform duration-200">
-            <div class="relative z-10">
-                <p class="text-indigo-200 text-sm font-semibold mb-1 uppercase tracking-wider">Итого белка</p>
-                <div class="flex items-baseline">
-                    <span id="res" class="text-6xl font-black tracking-tighter">0.0</span>
-                    <span class="text-2xl font-medium ml-2 text-indigo-200">грамм</span>
-                </div>
-            </div>
-            <!-- Decorative circle -->
-            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500 rounded-full opacity-50"></div>
-        </div>
-
-        <!-- Form -->
-        <div class="input-card p-6 space-y-5">
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Белок на 100г продукта (г)</label>
-                <div class="relative">
-                    <input type="number" id="y" inputmode="decimal" placeholder="Например: 18.5" 
-                        class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
-                    <div class="absolute right-5 top-4 text-slate-300 font-bold">Y</div>
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Вес вашей порции (г)</label>
-                <div class="relative">
-                    <input type="number" id="z" inputmode="numeric" placeholder="Например: 250" 
-                        class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
-                    <div class="absolute right-5 top-4 text-slate-300 font-bold">Z</div>
-                </div>
-            </div>
-        </div>
-
-
-    <!-- Formula Hint -->
+    <div class="app-container w-full flex-1 relative">
         
-
-        <!-- History Section -->
-<div class="text-center">
-            <span class="bg-white px-10 py-2 rounded-full text-[12px] font-bold text-slate-500 shadow-sm uppercase tracking-widest border border-slate-75">
-            </span>
-        </div>
-        <div id="history-section" class="hidden space-y-3 px-2">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">История</h2>
-                <button onclick="clearHistory()" class="text-[10px] font-bold text-indigo-500 uppercase">Очистить</button>
+        <!-- СТРАНИЦА 1: КАЛЬКУЛЯТОР (Ваш код) -->
+        <div id="view-calc" class="tab-content active">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-2 mb-6">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">PROTEIN<span class="text-indigo-600">.</span></h1>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-widest">Калькулятор порции</p>
+                </div>
+                <div class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                </div>
             </div>
-            <div id="history-list" class="space-y-2">
-                
+
+            <!-- Result Display -->
+            <div id="result-box" class="bg-indigo-600 rounded-[32px] p-8 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden transition-transform duration-200 mb-6">
+                <div class="relative z-10">
+                    <p class="text-indigo-200 text-sm font-semibold mb-1 uppercase tracking-wider">Итого белка</p>
+                    <div class="flex items-baseline">
+                        <span id="res" class="text-6xl font-black tracking-tighter">0.0</span>
+                        <span class="text-2xl font-medium ml-2 text-indigo-200">грамм</span>
+                    </div>
+                </div>
+                <!-- Decorative circle (сохранен) -->
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-500 rounded-full opacity-50"></div>
+            </div>
+
+            <!-- Form -->
+            <div class="input-card p-6 space-y-5 mb-6">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Белок на 100г продукта</label>
+                    <div class="relative">
+                        <input type="number" id="y" inputmode="decimal" placeholder="Например: 18.5" 
+                            class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
+                        <div class="absolute right-5 top-4 text-slate-300 font-bold">Y</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Вес вашей порции (г)</label>
+                    <div class="relative">
+                        <input type="number" id="z" inputmode="numeric" placeholder="Например: 250" 
+                            class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 text-lg font-bold transition-all outline-none text-slate-700">
+                        <div class="absolute right-5 top-4 text-slate-300 font-bold">Z</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formula Hint -->
+            <div class="text-center mb-6">
+                <span class="bg-white px-4 py-2 rounded-full text-[10px] font-bold text-slate-400 shadow-sm uppercase tracking-widest border border-slate-100">
+                    Formula: (Y / 100) * Z
+                </span>
+            </div>
+
+            <!-- History Section (Обновленный) -->
+            <div id="history-section" class="hidden space-y-3 px-2">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">История</h2>
+                    <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tight">Добавить в день →</span>
+                </div>
+                <div id="history-list" class="space-y-2">
+                    <!-- Items injected here -->
+                </div>
+            </div>
+        </div>
+
         <!-- СТРАНИЦА 2: МОЙ ДЕНЬ -->
-    <div id="view-daily" class="tab-content p-5 pb-28 max-w-md mx-auto w-full">
-        <header class="flex justify-between items-center mb-6 mt-2">
-            <h1 class="text-2xl font-black tracking-tight text-slate-900">МОЙ ДЕНЬ</h1>
-            <button onclick="clearDay()" class="text-[10px] font-bold text-red-400 bg-red-50 px-4 py-2 rounded-xl btn-press uppercase tracking-widest">Очистить</button>
-        </header>
+        <div id="view-daily" class="tab-content">
+             <!-- Header Дня -->
+             <div class="flex items-center justify-between px-2 mb-6">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800 tracking-tight">МОЙ ДЕНЬ</h1>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-widest">Сводка за сегодня</p>
+                </div>
+                <button onclick="clearDay()" class="text-[10px] font-bold text-red-400 bg-red-50 px-3 py-1.5 rounded-full uppercase">Сброс</button>
+            </div>
 
-        <div class="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl mb-8 relative overflow-hidden transition-all duration-300" id="daily-card">
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Итого за сегодня</p>
-            <div class="flex items-baseline">
-                <span id="daily-total" class="text-7xl font-black tracking-tighter">0</span>
-                <span class="text-2xl font-bold ml-2 text-slate-700 uppercase">г</span>
+            <!-- Daily Summary (В стиле вашего Result Box) -->
+            <div class="bg-slate-800 rounded-[32px] p-8 text-white shadow-2xl relative overflow-hidden mb-6">
+                <div class="relative z-10">
+                    <p class="text-slate-400 text-sm font-semibold mb-1 uppercase tracking-wider">Всего за сегодня</p>
+                    <div class="flex items-baseline">
+                        <span id="daily-total" class="text-6xl font-black tracking-tighter">0</span>
+                        <span class="text-2xl font-medium ml-2 text-slate-500">г</span>
+                    </div>
+                </div>
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white rounded-full opacity-5"></div>
             </div>
-            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-500 opacity-10 rounded-full blur-xl"></div>
+
+            <div id="daily-list" class="space-y-2 px-1"></div>
+            <div id="empty-state" class="text-center py-10 text-slate-300 text-sm italic">Вы пока ничего не добавили</div>
         </div>
 
-        <div id="daily-list" class="space-y-3"></div>
-        <div id="empty-state" class="text-center py-16">
-            <div class="text-slate-200 mb-2">
-                <svg class="w-12 h-12 mx-auto opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-            </div>
-            <p class="text-slate-300 text-sm font-medium tracking-tight">Сегодня записей еще нет</p>
-        </div>
     </div>
-                <!-- Items injected here -->
-            </div>
+
+    <!-- Нижняя навигация -->
+    <nav class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-lg border-t border-slate-100 pb-safe safe-bottom z-50">
+        <div class="flex justify-around items-center h-16 max-w-md mx-auto">
+            <button onclick="switchTab('calc')" class="nav-item active flex-1 flex flex-col items-center justify-center transition-colors" id="nav-calc">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                <span class="text-[9px] font-black uppercase mt-1 tracking-widest">Считать</span>
+            </button>
+            <button onclick="switchTab('daily')" class="nav-item flex-1 flex flex-col items-center justify-center transition-colors relative" id="nav-daily">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                <span class="text-[9px] font-black uppercase mt-1 tracking-widest">Дневник</span>
+                <div id="nav-dot" class="absolute top-3 right-[35%] w-2 h-2 bg-indigo-500 rounded-full hidden border-2 border-white"></div>
+            </button>
         </div>
-    </div>
-    
+    </nav>
+
     <script>
+        // Инициализация переменных
         let calcHistory = JSON.parse(localStorage.getItem('tempHistory')) || [];
         let dailyLog = JSON.parse(localStorage.getItem('dailyLog')) || [];
         let lastDate = localStorage.getItem('lastDate');
         let saveTimer;
 
+        // Элементы DOM
         const yInput = document.getElementById('y');
         const zInput = document.getElementById('z');
         const resDisplay = document.getElementById('res');
-        const calcHistoryList = document.getElementById('calc-history-list');
-        const dailyTotalDisplay = document.getElementById('daily-total');
+        const resultBox = document.getElementById('result-box');
+        const historySection = document.getElementById('history-section');
+        const historyList = document.getElementById('history-list');
         const dailyList = document.getElementById('daily-list');
+        const dailyTotalDisplay = document.getElementById('daily-total');
         const navDot = document.getElementById('nav-dot');
-        const dailyCard = document.getElementById('daily-card');
 
         window.onload = () => {
             checkNewDay();
-            renderCalcHistory();
+            renderHistory();
             renderDaily();
         };
 
         function checkNewDay() {
             const today = new Date().toDateString();
             if (lastDate !== today) {
-                dailyLog = [];
+                dailyLog = []; // Сброс на новый день
                 localStorage.setItem('dailyLog', JSON.stringify(dailyLog));
                 localStorage.setItem('lastDate', today);
             }
         }
 
-        function updateCalc() {
+        function update() {
             const y = parseFloat(yInput.value) || 0;
             const z = parseFloat(zInput.value) || 0;
-            const result = (y / 100) * z;
-            const formatted = result % 1 === 0 ? result.toFixed(0) : result.toFixed(1);
-            resDisplay.innerText = (y > 0 && z > 0) ? formatted : "0.0";
-
-            clearTimeout(saveTimer);
-            if (y > 0 && z > 0) {
-                saveTimer = setTimeout(() => addToCalcHistory(y, z, formatted), 1000);
-            }
-        }
-
-        function addToCalcHistory(y, z, x) {
-            if (calcHistory.length > 0 && calcHistory[0].y === y && calcHistory[0].z === z) return;
-            calcHistory.unshift({ id: Date.now(), y, z, x, added: false });
-            calcHistory = calcHistory.slice(0, 5);
-            localStorage.setItem('tempHistory', JSON.stringify(calcHistory));
-            renderCalcHistory();
-        }
-
-        function renderCalcHistory() {
-            if (calcHistory.length === 0) {
-                document.getElementById('calc-history').classList.add('hidden');
+            
+            if (y === 0 || z === 0) {
+                resDisplay.innerText = "0.0";
                 return;
             }
-            document.getElementById('calc-history').classList.remove('hidden');
-            calcHistoryList.innerHTML = calcHistory.map(item => `
-                <div class="history-card flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">${item.z}г порция</span>
-                        <span class="text-sm font-bold text-slate-700">${item.y}г белка на 100г</span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="text-xl font-black text-slate-800">${item.x}г</span>
-                        <button onclick="addToDaily(${item.id}, this)" class="h-10 w-10 ${item.added ? 'bg-green-100 text-green-600' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'} rounded-xl flex items-center justify-center transition-all btn-press">
-                            ${item.added ? 
-                                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : 
-                                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>'}
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+
+            const result = (y / 100) * z;
+            const formattedResult = result % 1 === 0 ? result.toFixed(0) : result.toFixed(1);
+            
+            resDisplay.innerText = formattedResult;
+            
+            // Эффект пульсации (Ваш код)
+            resultBox.classList.add('scale-[1.03]');
+            setTimeout(() => resultBox.classList.remove('scale-[1.03]'), 150);
+
+            // Сохранение
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                addToHistory(y, z, formattedResult);
+            }, 1000);
         }
 
-        function addToDaily(id, btn) {
+        function addToHistory(y, z, x) {
+            // Проверка на дубликат (текущий)
+            if (calcHistory.length > 0 && calcHistory[0].y === y && calcHistory[0].z === z) return;
+
+            const entry = { y, z, x, id: Date.now(), added: false };
+            calcHistory.unshift(entry);
+            calcHistory = calcHistory.slice(0, 5);
+            
+            localStorage.setItem('tempHistory', JSON.stringify(calcHistory));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (calcHistory.length > 0) {
+                historySection.classList.remove('hidden');
+                historyList.innerHTML = calcHistory.map(item => `
+                    <div class="history-item bg-white/80 backdrop-blur-sm border border-white p-3 rounded-2xl flex justify-between items-center shadow-sm">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">${item.z}г продукта</span>
+                            <span class="text-xs font-bold text-slate-600">${item.y}г белка на 100г</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-black text-indigo-600">${item.x}г</span>
+                            <!-- Кнопка добавления -->
+                            <button onclick="addToDaily(${item.id})" class="h-9 w-9 rounded-xl flex items-center justify-center transition-all ${item.added ? 'bg-green-100 text-green-600' : 'bg-indigo-50 text-indigo-500 hover:bg-indigo-100'}">
+                                ${item.added ? 
+                                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : 
+                                    '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>'}
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function addToDaily(id) {
             const index = calcHistory.findIndex(i => i.id === id);
             if (index === -1) return;
-            
             const item = calcHistory[index];
-            if (item.added) return;
 
+            if (item.added) return; // Уже добавлено
+
+            // Добавляем в лог
             dailyLog.unshift({ ...item, addedAt: Date.now() });
-            calcHistory[index].added = true;
-            
+            calcHistory[index].added = true; // Меняем статус в истории
+
+            // Сохраняем
             localStorage.setItem('dailyLog', JSON.stringify(dailyLog));
             localStorage.setItem('tempHistory', JSON.stringify(calcHistory));
-            
-            if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(25);
-            
-            navDot.classList.remove('hidden');
-            renderCalcHistory();
-            renderDaily();
 
-            // Эффект на главной карточке
-            dailyCard.classList.add('scale-105');
-            setTimeout(() => dailyCard.classList.remove('scale-105'), 200);
+            // Визуальная отдача
+            if (navigator.vibrate) navigator.vibrate(20);
+            navDot.classList.remove('hidden');
+
+            renderHistory();
+            renderDaily();
         }
 
         function renderDaily() {
-            const total = dailyLog.reduce((sum, i) => sum + parseFloat(i.x), 0);
-            const displayTotal = total % 1 === 0 ? total : total.toFixed(1);
-            dailyTotalDisplay.innerText = displayTotal;
-            
-            document.getElementById('empty-state').style.display = dailyLog.length ? 'none' : 'block';
-            dailyList.innerHTML = dailyLog.map(item => `
-                <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-slideUp">
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold text-slate-800">${item.x}г белка</span>
-                        <span class="text-[10px] text-slate-400 font-medium tracking-tight">Порция ${item.z}г</span>
+            const total = dailyLog.reduce((sum, item) => sum + parseFloat(item.x), 0);
+            const formattedTotal = total % 1 === 0 ? total : total.toFixed(1);
+            dailyTotalDisplay.innerText = formattedTotal;
+
+            if (dailyLog.length === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                dailyList.innerHTML = '';
+            } else {
+                document.getElementById('empty-state').style.display = 'none';
+                dailyList.innerHTML = dailyLog.map(item => `
+                    <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-2">
+                         <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-800">${item.x}г белка</span>
+                            <span class="text-[10px] text-slate-400 font-medium">Из порции ${item.z}г</span>
+                        </div>
+                        <button onclick="removeFromDaily(${item.addedAt})" class="text-slate-300 hover:text-red-400 p-2">
+                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
                     </div>
-                    <button onclick="removeFromDaily(${item.addedAt})" class="text-slate-200 hover:text-red-400 p-2 btn-press">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </div>
-            `).join('');
+                `).join('');
+            }
         }
 
         function removeFromDaily(addedAt) {
@@ -259,7 +299,7 @@
         }
 
         function clearDay() {
-            if(confirm('Очистить записи за день?')) {
+            if(confirm('Очистить весь день?')) {
                 dailyLog = [];
                 localStorage.setItem('dailyLog', JSON.stringify(dailyLog));
                 renderDaily();
@@ -267,16 +307,20 @@
         }
 
         function switchTab(tab) {
+            // Переключение контента
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`view-${tab}`).classList.add('active');
+            
+            // Переключение кнопок
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById(`nav-${tab}`).classList.add('active');
+            
             if (tab === 'daily') navDot.classList.add('hidden');
+            window.scrollTo(0, 0);
         }
 
-        yInput.addEventListener('input', updateCalc);
-        zInput.addEventListener('input', updateCalc);
+        yInput.addEventListener('input', update);
+        zInput.addEventListener('input', update);
     </script>
 </body>
 </html>
-
